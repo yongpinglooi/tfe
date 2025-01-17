@@ -1,24 +1,31 @@
-terraform {
-  version = "1.0.0"
-}
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
-  region = "us-west-2"
+  region = var.region
 }
 
-resource "aws_instance" "example" {
-  ami           = "ami-0c55b159cbfafe1f0"  # Replace with a valid AMI ID
-  instance_type = "t2.micro"
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
+resource "aws_instance" "ubuntu" {
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = var.instance_type
 
   tags = {
-    Name = "TerraformExampleInstance"
+    Name = var.instance_name
   }
-}
-
-output "instance_id" {
-  value = aws_instance.example.id
-}
-
-output "public_ip" {
-  value = aws_instance.example.public_ip
 }
